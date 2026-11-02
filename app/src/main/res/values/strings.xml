@@ -3,7 +3,9 @@
     <string name="app_name">Flip2Wake</string>
     <string name="service_switch">Flip-to-wake service</string>
     <string name="angle_label">Turning angle needed</string>
-    <string name="angle_help">How far the device must rotate away from where it started before rotating back. 180° is a full flip face-down.</string>
+    <string name="angle_help">How far to turn the device from wherever it is right now, before turning it back. Any direction works. 180° = a full flip over.</string>
+    <string name="tol_label">Tolerance (error room)</string>
+    <string name="tol_help">Allowed slack on both halves of the movement: the turn can fall this many degrees short, and the device only has to come back to within this many degrees of where it started.</string>
     <string name="time_label">Maximum time for the whole movement</string>
     <string name="time_help">Over and back must be completed within this time to count.</string>
     <string name="battery_button">Disable battery optimisation</string>

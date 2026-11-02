@@ -27,8 +27,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private static final int REQ_NOTIF = 10;
 
     private Switch serviceSwitch;
-    private TextView statusText, angleValue, timeValue, testText, batteryHelp;
-    private SeekBar angleSeek, timeSeek;
+    private TextView statusText, angleValue, tolValue, ruleText, timeValue, testText, batteryHelp;
+    private SeekBar angleSeek, tolSeek, timeSeek;
     private Button batteryButton, fullScreenButton;
 
     private SensorManager sensorManager;
@@ -45,6 +45,9 @@ public class MainActivity extends Activity implements SensorEventListener {
         serviceSwitch = findViewById(R.id.serviceSwitch);
         statusText = findViewById(R.id.statusText);
         angleValue = findViewById(R.id.angleValue);
+        tolValue = findViewById(R.id.tolValue);
+        ruleText = findViewById(R.id.ruleText);
+        tolSeek = findViewById(R.id.tolSeek);
         timeValue = findViewById(R.id.timeValue);
         testText = findViewById(R.id.testText);
         batteryHelp = findViewById(R.id.batteryHelp);
@@ -54,8 +57,13 @@ public class MainActivity extends Activity implements SensorEventListener {
         fullScreenButton = findViewById(R.id.fullScreenButton);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        testDetector = new FlipDetector(Prefs.angle(this), Prefs.maxTimeMs(this));
+        // Prefer the gyro-fused gravity sensor (accurate during fast turns); fall back to the
+        // raw accelerometer on devices without a gyroscope.
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        boolean usingGravity = accelerometer != null;
+        if (!usingGravity) accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        testDetector = new FlipDetector(Prefs.angle(this), Prefs.tolerance(this), Prefs.maxTimeMs(this));
+        testDetector.setInputIsGravity(usingGravity);
 
         // ---- angle
         angleSeek.setMax((Prefs.ANGLE_MAX - Prefs.ANGLE_MIN) / Prefs.ANGLE_STEP);
@@ -68,6 +76,19 @@ public class MainActivity extends Activity implements SensorEventListener {
                 if (fromUser) { Prefs.setAngle(MainActivity.this, v); applyTestConfig(); }
             }
         });
+
+        // ---- tolerance
+        tolSeek.setMax((Prefs.TOL_MAX - Prefs.TOL_MIN) / Prefs.TOL_STEP);
+        tolSeek.setProgress((Prefs.tolerance(this) - Prefs.TOL_MIN) / Prefs.TOL_STEP);
+        showTol(Prefs.tolerance(this));
+        tolSeek.setOnSeekBarChangeListener(new SimpleSeek() {
+            @Override public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
+                int v = Prefs.TOL_MIN + p * Prefs.TOL_STEP;
+                showTol(v);
+                if (fromUser) { Prefs.setTolerance(MainActivity.this, v); applyTestConfig(); }
+            }
+        });
+        showRule();
 
         // ---- time
         timeSeek.setMax((Prefs.TIME_MAX - Prefs.TIME_MIN) / Prefs.TIME_STEP);
@@ -143,8 +164,10 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
         boolean recent = System.currentTimeMillis() - lastDetectedAt < 1500;
         testText.setText(String.format(Locale.US,
-                "Tilt from face-up: %3.0f°\nGestures detected here: %d%s",
-                testDetector.currentTiltDeg(), detections,
+                "Sensor: %s\nTilt from face-up: %3.0f°\nBiggest turn in last %.1f s: %3.0f° (need %.0f°)\nGestures detected here: %d%s",
+                e.sensor.getType() == Sensor.TYPE_GRAVITY ? "gravity (gyro-fused)" : "accelerometer",
+                testDetector.currentTiltDeg(), Prefs.maxTimeMs(this) / 1000f,
+                testDetector.recentMaxTurnDeg(), testDetector.minTurnDeg(), detections,
                 recent ? "\n✔ FLIP DETECTED — this would wake the screen" : "\nTry it: flip the device over and back"));
         testText.setBackgroundColor(recent ? 0x5534C759 : 0x00000000);
     }
@@ -155,11 +178,22 @@ public class MainActivity extends Activity implements SensorEventListener {
     // ---- helpers
 
     private void applyTestConfig() {
-        testDetector.setConfig(Prefs.angle(this), Prefs.maxTimeMs(this));
+        testDetector.setConfig(Prefs.angle(this), Prefs.tolerance(this), Prefs.maxTimeMs(this));
+        showRule();
     }
 
     private void showAngle(int v) {
         angleValue.setText(String.format(Locale.US, "%d°", v));
+    }
+
+    private void showTol(int v) {
+        tolValue.setText(String.format(Locale.US, "± %d°", v));
+    }
+
+    private void showRule() {
+        ruleText.setText(String.format(Locale.US,
+                "Counts when turned at least %.0f° away from the starting position, then back to within %.0f° of it, all within %.1f s.",
+                testDetector.minTurnDeg(), testDetector.returnToleranceDeg(), Prefs.maxTimeMs(this) / 1000f));
     }
 
     private void showTime(int ms) {

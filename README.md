@@ -16,14 +16,20 @@ Every push to `main` is built by GitHub Actions. Grab **Flip2Wake.apk** from the
 | Setting | Range | Default | Meaning |
 |---|---|---|---|
 | Flip-to-wake service | on / off | off | Starts/stops the background service. Restarts automatically after reboot if left on. |
-| Turning angle needed | 60°–180° | 150° | How far the device must rotate away from its starting orientation. 180° = completely face-down. |
+| Turning angle needed | 60°–180° | 180° | How far to turn the device from wherever it is right now before turning it back. 180° = a full flip. |
+| Tolerance | ±5°–45° | ±20° | Error room on both halves: the turn may fall this far short, and the device only needs to come back to within this many degrees of where it started. |
 | Maximum time for the whole movement | 0.3–5.0 s | 1.5 s | The whole over-and-back must finish inside this window. |
 
 The app also has a **live sensor test** that shows the current tilt and flashes when a gesture is
 detected, so you can tune the settings before relying on them.
 
-The gesture is relative to how the device starts, so it works from face-up on a table,
-face-down, or held in your hand. It must come back to within ~35° of where it started.
+The gesture is measured from wherever the device is resting when you start, so it works
+face-up on a table, face-down, or held in your hand. The turning direction doesn't matter:
+left or right, over the long or short edge, back the way it came, or continuing round the same
+way until it's back where it started all count. (Spinning it flat on a table doesn't count, since
+that doesn't change which way gravity points.)
+
+Example: angle 180° ± 20° means turn it at least 160° over, then back to within 20° of the start.
 
 ## Setup tips
 
@@ -35,8 +41,10 @@ face-down, or held in your hand. It must come back to within ~35° of where it s
 
 ## How it works
 
-- `FlipDetector.java`: pure-Java gesture detector (low-pass gravity, short history buffer,
-  "start → far away → back to start" within the time window, 1.5 s cooldown).
+- `FlipDetector.java`: pure-Java gesture detector. Uses Android's gyro-fused gravity sensor
+  when available (accurate during fast turns), otherwise a low-pass-filtered accelerometer.
+  Keeps a short history and looks for "resting start → turned far enough → back near start"
+  inside the time window, with a 1.5 s cooldown.
 - `FlipWakeService.java`: foreground service. Only listens to the sensor while the screen is
   **off** (holds a partial wake lock then so samples keep arriving). On detection it acquires a
   screen wake lock with `ACQUIRE_CAUSES_WAKEUP`. If the screen is still off 350 ms later it

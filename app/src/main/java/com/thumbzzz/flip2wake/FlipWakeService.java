@@ -80,8 +80,13 @@ public class FlipWakeService extends Service implements SensorEventListener,
 
         powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        detector = new FlipDetector(Prefs.angle(this), Prefs.maxTimeMs(this));
+        // Prefer the gyro-fused gravity sensor (accurate during fast turns); fall back to the
+        // raw accelerometer on devices without a gyroscope.
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        boolean usingGravity = accelerometer != null;
+        if (!usingGravity) accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        detector = new FlipDetector(Prefs.angle(this), Prefs.tolerance(this), Prefs.maxTimeMs(this));
+        detector.setInputIsGravity(usingGravity);
         Prefs.get(this).registerOnSharedPreferenceChangeListener(this);
 
         sensorThread = new HandlerThread("flip2wake-sensor");
@@ -158,7 +163,7 @@ public class FlipWakeService extends Service implements SensorEventListener,
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sp, String key) {
-        detector.setConfig(Prefs.angle(this), Prefs.maxTimeMs(this));
+        detector.setConfig(Prefs.angle(this), Prefs.tolerance(this), Prefs.maxTimeMs(this));
     }
 
     // ---------------------------------------------------------------- waking
