@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple launcher icon: a phone outline with a curved flip arrow. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#1E6FD9"
+        android:pathData="M54,4a50,50 0,1 1,0 100a50,50 0,1 1,0 -100z" />
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M40,26h28a5,5 0,0 1,5 5v46a5,5 0,0 1,-5 5h-28a5,5 0,0 1,-5 -5v-46a5,5 0,0 1,5 -5zM41,32v40h26v-40z" />
+    <path android:fillColor="#FFD54F"
+        android:pathData="M78,36a28,28 0,0 1,0 36l5,4l-14,3l1,-14l4,4a22,22 0,0 0,0 -30z" />
+</vector>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Flip2Wake</string>
+    <string name="service_switch">Flip-to-wake service</string>
+    <string name="angle_label">Turning angle needed</string>
+    <string name="angle_help">How far the device must rotate away from where it started before rotating back. 180° is a full flip face-down.</string>
+    <string name="time_label">Maximum time for the whole movement</string>
+    <string name="time_help">Over and back must be completed within this time to count.</string>
+    <string name="battery_button">Disable battery optimisation</string>
+    <string name="battery_help">Recommended: stops Android from killing the service while the screen is off.</string>
+    <string name="test_label">Live sensor test</string>
+    <string name="notif_channel">Flip-to-wake service</string>
+    <string name="notif_title">Flip to wake is active</string>
+    <string name="notif_text">Turn the device over and back to wake the screen.</string>
+    <string name="wake_channel">Wake fallback</string>
+</resources>
