@@ -10,6 +10,8 @@ the screen turns on (to the lock screen, just like the power button).
 
 Every push to `main` is built by GitHub Actions. Grab **Flip2Wake.apk** from the
 [latest release](../../releases/tag/latest) and install it (allow "install unknown apps").
+New builds install as updates over the old one; they're all signed with the same key
+(`app/flip2wake.keystore`, committed on purpose so CI builds match).
 
 ## Settings (in the app)
 

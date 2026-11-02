@@ -10,15 +10,30 @@ android {
         applicationId 'com.thumbzzz.flip2wake'
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName '1.0'
+        // CI sets GITHUB_RUN_NUMBER, so every GitHub build gets a higher version code.
+        def run = (System.getenv('GITHUB_RUN_NUMBER') ?: '0') as int
+        versionCode 100 + run
+        versionName "1.1." + run
+    }
+
+    // One fixed key for every build, so new APKs install as updates over old ones.
+    // (A key that changes between builds makes Android reject the update with "App not installed".)
+    signingConfigs {
+        fixed {
+            storeFile file('flip2wake.keystore')
+            storePassword 'flip2wake'
+            keyAlias 'flip2wake'
+            keyPassword 'flip2wake'
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.fixed
+        }
         release {
             minifyEnabled false
-            // Signed with the debug key so the CI-built release APK installs directly.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.fixed
         }
     }
 
